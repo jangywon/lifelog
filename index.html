@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>lifelog | scatter plot</title>
+		<link rel="stylesheet" href="//code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+		<style>
+
+			body {
+				font: 10px sans-serif;
+			}
+
+			.axis path,
+			.axis line {
+				fill: none;
+				stroke: #000;
+				shape-rendering: crispEdges;
+			}
+
+			.dot {
+				stroke: #000;
+			}
+		</style>
+	</head>
+	<body>
+		<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+		<script src="//code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+		<script src="http://d3js.org/d3.v3.min.js"></script>
+		<script>
+			var margin = {top: 40, right: 40, bottom: 40, left: 40},
+			width = 850 - margin.left - margin.right,
+			height = 850 - margin.top - margin.bottom;
+
+			var x = d3.scale.linear()
+			.range([0, width]);
+
+			var y = d3.scale.linear()
+			.range([height, 0]);
+
+			var color = d3.scale.category10();
+
+			var xAxis = d3.svg.axis()
+			.scale(x)
+			.orient("bottom");
+
+			var yAxis = d3.svg.axis()
+			.scale(y)
+			.orient("left");
+
+			var parallel_svg=d3.select("body").append("svg")
+			.attr("width", 100)
+			.attr("height", height+margin.top+margin.bottom)
+			.attr("id", "parallel_dummy")
+			.append("g");
+
+			var svg = d3.select("body").append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+			.attr("id", "chart")
+			.append("g")
+			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+			function extent_all(_data, axis) {
+				var filter=(axis==="x")?/^x/:/^y/;
+				var min=Number.MAX_VALUE;
+				var max=-Number.MAX_VALUE;
+
+				for(var i=0; i<_data.length; ++i) {
+					for(var prop in _data[i]) {
+						if(filter.test(prop)==true) {
+							//console.log(prop);
+							if(min > Number(_data[i][prop]))	min=Number(_data[i][prop]);
+							if(max < Number(_data[i][prop]))	max=Number(_data[i][prop]);
+						}
+					}
+				}
+				return [min, max];
+			}
+
+			var tooltip=d3.select("body")
+			.append("div")
+			.style("position", "absolute")
+			.style("z-index", "10")
+			.style("visibility", "hidden")
+			.style("font-size", "14px");
+
+			d3.tsv("parallel_data.csv", function(error, data) {
+				var women=$.grep(data, function(v) 	{
+					return v.sex==="2";
+				});
+				var men=$.grep(data, function(v) {
+					return v.sex==="1";
+				});
+
+				parallel_svg.append("circle")
+				.attr("class", "dummy_w")
+				.attr("r", 30)
+				.attr("cx", 50)
+				.attr("cy", function(d) {
+					return 300;
+				})
+				.style("fill", "red")
+				.on("mouseover", function(d) {
+					$(this)
+					.css("stroke", "#aeaeae")
+					.css("stroke-opacity", 0.4)
+					.css("stroke-width", "8px");
+				})
+				.on("mouseout", function(d) {
+					$(this).css("stroke-width", "0px");
+				});
+
+				parallel_svg.append("circle")
+				.attr("class", "dummy_m")
+				.attr("r", 30)
+				.attr("cx", 50)
+				.attr("cy", function(d) {
+					return 200;
+				})
+				.style("fill", "blue")
+				.on("mouseover", function(d) {
+					$(this)
+					.css("stroke", "#aeaeae")
+					.css("stroke-opacity", 0.4)
+					.css("stroke-width", "8px");
+				})
+				.on("mouseout", function(d) {
+					$(this).css("stroke-width", "0px");
+				});
+
+				parallel_svg.append("circle")
+				.attr("class", "dummy")
+				.attr("r", 30)
+				.attr("cx", 50)
+				.attr("cy", function(d) {
+					return 100;
+				})
+				.style("fill", "black")
+				.on("click", function(d) {
+					svg.selectAll(".dot")
+					.transition()
+					.duration(1000)
+					.style("fill-opacity", 0.2);
+				})
+				.on("mouseover", function(d) {
+					$(this)
+					.css("stroke", "#aeaeae")
+					.css("stroke-opacity", 0.4)
+					.css("stroke-width", "8px");
+				})
+				.on("mouseout", function(d) {
+					$(this).css("stroke-width", "0px");
+				});
+
+				parallel_svg.select(".dummy_w")
+				.on("click", function(d) {
+					svg.selectAll(".dot")
+					.transition()
+					.duration(1000)
+					.style("fill-opacity", function(d2) {
+						for(var i=0; i<women.length; ++i) {
+							if(women[i].index===d2.index)	return 0.2;
+						}
+						return 0;
+					});
+				});
+				parallel_svg.select(".dummy_m")
+				.on("click", function(d) {
+					svg.selectAll(".dot")
+					.transition()
+					.duration(1000)
+					.style("fill-opacity", function(d2) {
+						for(var i=0; i<men.length; ++i) {
+							if(men[i].index===d2.index)	return 0.2;
+						}
+						return 0;
+					});
+				});
+
+			});
+
+
+			d3.csv("coord.csv", function(error, data) {
+				x.domain(extent_all(data, "x"));
+				y.domain(extent_all(data, "y"));
+
+				svg.append("g")
+				.attr("class", "x axis")
+				.attr("transform", "translate(0," + height + ")")
+				.call(xAxis)
+				.append("text")
+				.attr("class", "label")
+				.attr("x", width)
+				.attr("y", -6)
+				.style("text-anchor", "end")
+				.text("axis X");
+
+				svg.append("g")
+				.attr("class", "y axis")
+				.call(yAxis)
+				.append("text")
+				.attr("class", "label")
+				.attr("transform", "rotate(-90)")
+				.attr("y", 6)
+				.attr("dy", ".71em")
+				.style("text-anchor", "end")
+				.text("axis Y");
+
+
+
+				svg.selectAll(".dot")
+				.data(data)
+				.enter().append("circle")
+				.transition()
+				.duration(1000)
+				.attr("class", "dot")
+				.attr("r", 5)
+				.attr("cx", function(d) { return x(d.x0001); })
+				.attr("cy", function(d) { return y(d.y0001); })
+				.style("fill", "#000000")
+				.style("fill-opacity", 0.2)
+				.style("stroke-opacity", 0);
+
+				// mouse event tooltip
+				svg.selectAll("circle")
+				.on("mouseover", function(d) {
+					return tooltip.style("visibility", "visible");	
+				})
+				.on("mousemove", function(d, i) {
+					tooltip.text(d.index);
+					return tooltip.style("top", (event.pageY-10)+"px")
+					.style("left", (event.pageX+10)+"px");
+				})
+				.on("mouseout", function(d) {
+					return tooltip.style("visibility", "hidden");
+				});
+
+
+
+				function prop_search(_data, axis, value) {
+					for(var prop in _data) {
+						if(Number(prop.slice(1, 3))===value && prop.slice(0, 1)===axis) {
+							return _data[prop];
+						}
+					}
+				}
+
+				$("#slider").on("slide", function(event, ui) {
+					$("#time").val(ui.value+" ~ "+(ui.value+1)+" hour");
+
+					svg.selectAll(".dot")
+					.transition()
+					.duration(1000)
+					.attr("cx", function(d) { return x(prop_search(d, "x", ui.value)); })
+					.attr("cy", function(d) { return y(prop_search(d, "y", ui.value)); });
+				});
+			});
+
+			$(function() {
+				$("#slider").slider({
+					max:23
+				});
+				$("#time").val("0 ~ 1 hour");
+			});
+
+		</script>
+		<p style="margin-left:50px;">
+		<label for="time">TIME : </label>
+		<input type="text" id="time" style="border:0; color:#f6931f; font-weight:bold;">
+		</p>
+		<div id="slider" style="width:760px; margin:20px 50px;"></div>
+	</body>
+</html>
