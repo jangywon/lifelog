@@ -68,10 +68,10 @@
 		<script src="//code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
 		<script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
 		<script type="text/javascript">
-			var species = ["월", "월 ", "c"], traits = ["region", "farm", "housing", "ownership", "residential_area", "householder_rel", "sex", "age_code", "marrige_status", "education", "learn_status", "preschool_child", "preschool_child_num", "economic", "sideline", "hour_dayjob", "hour_sideline", "industry", "job", "job_status", "wage_earner_work_form	offday", "monthly_income"];
+			var species = ["월", "월 ", "c"], traits = ["index","region", "farm", "housing", "ownership", "residential_area", "householder_rel", "sex", "age_code", "marrige_status", "education", "learn_status", "preschool_child", "preschool_child_num", "economic", "sideline", "hour_dayjob", "hour_sideline", "industry", "job", "job_status", "wage_earner_work_form	offday", "monthly_income"];
 
 			var regionIndex = ["11", "21", "22", "23", "24", "25", "26", "31", "32", "33", "34", "35", "36", "37", "38", "39"];
-			var m = [160, 200, 160], w = 1880 - m[1] - m[3], h = 800 - m[0] - m[2];
+			var m = [regionIndex.length,160, 200, 160], w = 1880 - m[1] - m[3], h = 800 - m[0] - m[2];
 			var x = d3.scale.ordinal().domain(traits).rangePoints([0, w]), y = {};
 
 			var line = d3.svg.line(), axis = d3.svg.axis().orient("left"), foreground;
